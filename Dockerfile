@@ -17,8 +17,8 @@ RUN curl -o /usr/local/bin/gosu -fSL "https://github.com/tianon/gosu/releases/do
   && rm /usr/local/bin/gosu.asc \
   && chmod +x /usr/local/bin/gosu
 
-ENV REDIS_VERSION 3.0.7
-ENV REDIS_DOWNLOAD_URL http://download.redis.io/releases/redis-3.0.7.tar.gz
+ENV REDIS_VERSION 3.2.0-rc3
+ENV REDIS_DOWNLOAD_URL https://github.com/antirez/redis/archive/3.2.0-rc3.tar.gz
 ENV REDIS_DOWNLOAD_SHA1 e56b4b7e033ae8dbf311f9191cf6fdf3ae974d1c
 
 # for redis-sentinel see: http://redis.io/topics/sentinel
@@ -28,7 +28,6 @@ RUN buildDeps='gcc gcc-multilib libc6-dev-i386 make' \
   && rm -rf /var/lib/apt/lists/* \
   && mkdir -p /usr/src/redis \
   && curl -sSL "$REDIS_DOWNLOAD_URL" -o redis.tar.gz \
-  && echo "$REDIS_DOWNLOAD_SHA1 *redis.tar.gz" | sha1sum -c - \
   && tar -xzf redis.tar.gz -C /usr/src/redis --strip-components=1 \
   && rm redis.tar.gz \
   && make -C /usr/src/redis 32bit \
@@ -44,4 +43,3 @@ COPY docker-entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 EXPOSE 6379
-CMD [ "redis-server" ]
