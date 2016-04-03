@@ -6,7 +6,12 @@
 
 # Pull base image.
 FROM debian:jessie
-RUN apt-get install wget -y -q 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+     wget curl \
+    libc6-i386 \
+   && rm -rf /var/lib/apt/lists/*
+ 
 # Install Redis.
 RUN \
   cd /tmp && \
