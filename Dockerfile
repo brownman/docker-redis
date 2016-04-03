@@ -1,45 +1,37 @@
-FROM debian:jessie
+#
+# Redis Dockerfile
+#
+# https://github.com/dockerfile/redis
+#
 
-# add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
-RUN groupadd -r redis && useradd -r -g redis redis
+# Pull base image.
+FROM dockerfile/ubuntu
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    libc6-i386 \
-  && rm -rf /var/lib/apt/lists/*
+# Install Redis.
+RUN \
+  cd /tmp && \
+  wget https://github.com/antirez/redis/archive/3.2.0-rc3.tar.gz && \
+  tar xvzf redis-stable.tar.gz redis-stable && \
+  cd redis-stable && \
+  make && \
+  make install && \
+  cp -f src/redis-sentinel /usr/local/bin && \
+  mkdir -p /etc/redis && \
+  cp -f *.conf /etc/redis && \
+  rm -rf /tmp/redis-stable* && \
+  sed -i 's/^\(bind .*\)$/# \1/' /etc/redis/redis.conf && \
+  sed -i 's/^\(daemonize .*\)$/# \1/' /etc/redis/redis.conf && \
+  sed -i 's/^\(dir .*\)$/# \1\ndir \/data/' /etc/redis/redis.conf && \
+  sed -i 's/^\(logfile .*\)$/# \1/' /etc/redis/redis.conf
 
-# grab gosu for easy step-down from root
-RUN gpg --keyserver pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4
-RUN curl -o /usr/local/bin/gosu -fSL "https://github.com/tianon/gosu/releases/download/1.7/gosu-$(dpkg --print-architecture)" \
-  && curl -o /usr/local/bin/gosu.asc -fSL "https://github.com/tianon/gosu/releases/download/1.7/gosu-$(dpkg --print-architecture).asc" \
-  && gpg --verify /usr/local/bin/gosu.asc \
-  && rm /usr/local/bin/gosu.asc \
-  && chmod +x /usr/local/bin/gosu
+# Define mountable directories.
+VOLUME ["/data"]
 
-ENV REDIS_VERSION 3.2.0-rc3
-ENV REDIS_DOWNLOAD_URL https://github.com/antirez/redis/archive/3.2.0-rc3.tar.gz
-ENV REDIS_DOWNLOAD_SHA1 e56b4b7e033ae8dbf311f9191cf6fdf3ae974d1c
-
-# for redis-sentinel see: http://redis.io/topics/sentinel
-RUN buildDeps='gcc gcc-multilib libc6-dev-i386 make' \
-  && set -x \
-  && apt-get update && apt-get install -y $buildDeps --no-install-recommends \
-  && rm -rf /var/lib/apt/lists/* \
-  && mkdir -p /usr/src/redis \
-  && curl -sSL "$REDIS_DOWNLOAD_URL" -o redis.tar.gz \
-  && tar -xzf redis.tar.gz -C /usr/src/redis --strip-components=1 \
-  && rm redis.tar.gz \
-  && make -C /usr/src/redis 32bit \
-  && make -C /usr/src/redis install \
-  && rm -r /usr/src/redis \
-  && apt-get purge -y --auto-remove $buildDeps
-
-RUN mkdir /data && chown redis:redis /data
-VOLUME /data
+# Define working directory.
 WORKDIR /data
 
-COPY docker-entrypoint.sh /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+# Define default command.
+CMD ["redis-server", "/etc/redis/redis.conf"]
 
+# Expose ports.
 EXPOSE 6379
