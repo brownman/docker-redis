@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install Redis.
 RUN \
   cd /tmp && \
-  wget https://github.com/antirez/redis/archive/3.2.0-rc3.tar.gz && \
+  wget https://github.com/antirez/redis/archive/3.2.0-rc3.tar.gz redis-stable.tar.gz && \
   tar xvzf redis-stable.tar.gz redis-stable && \
   cd redis-stable && \
   make && \
