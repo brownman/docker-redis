@@ -6,7 +6,7 @@
 
 # Pull base image.
 FROM debian:jessie
-RUN apt-get install wget
+RUN apt-get install wget -y -q 
 # Install Redis.
 RUN \
   cd /tmp && \
